@@ -1,0 +1,17 @@
+# Streamlit theme — dark, modern quant-finance dashboard.
+# Calibrated to match the custom CSS in app.py.
+
+[theme]
+base = "dark"
+primaryColor = "#58A6FF"             # electric blue — primary accent
+backgroundColor = "#0A0E13"          # deep ink — canvas
+secondaryBackgroundColor = "#131820" # surface — sidebar / panels
+textColor = "#E6EDF3"                # near-white slate
+font = "sans serif"
+
+[server]
+headless = true
+runOnSave = true
+
+[browser]
+gatherUsageStats = false

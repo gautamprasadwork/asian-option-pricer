@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile-check app.py
+        run: python -m py_compile app.py
+
+      - name: Run engine tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Smoke-test engine end-to-end
+        run: |
+          python -c "
+          from engine import default_preset, price_auto, compute_greeks, run_diagnostics
+          c = default_preset().contract
+          r = price_auto(c, n_paths=10000)
+          g = compute_greeks(c, n_paths=10000)
+          d = run_diagnostics(c, r, g)
+          assert r.price > 0
+          assert 0 <= g.delta.value <= 1
+          print(f'Price OK: {r.price:.4f}, Delta OK: {g.delta.value:.4f}, Warnings: {len(d)}')
+          "
