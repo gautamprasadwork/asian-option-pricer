@@ -58,7 +58,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        "About": "Asian Option Pricer — Monte Carlo with geometric-Asian "
+        "About": "Asian Option Pricer · Monte Carlo with geometric Asian "
                  "control variate. Quantitative Finance project, UEP Poznań."
     },
 )
@@ -230,68 +230,35 @@ st.markdown(f"""
       border-radius: 8px;
   }}
 
-  /* ---- Floating right-side jump nav ---- */
-  .nav-jump {{
-      position: fixed;
-      top: 86px;
-      right: 22px;
-      z-index: 999;
-      background: rgba(19, 24, 32, 0.82);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid {BORDER};
-      border-radius: 10px;
-      padding: 8px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      font-size: 11px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-  }}
-  .nav-jump-label {{
-      font-size: 9px; font-weight: 700; color: {MUTED};
-      letter-spacing: 1px; text-transform: uppercase;
-      padding: 2px 10px 4px 10px;
-      border-bottom: 1px solid {BORDER};
-      margin-bottom: 4px;
-  }}
-  .nav-jump a {{
-      color: {MUTED};
-      text-decoration: none;
-      padding: 5px 12px;
-      border-radius: 6px;
-      transition: color 0.15s, background 0.15s;
-      font-weight: 500;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-  }}
-  .nav-jump a:hover {{
-      color: {ACCENT};
-      background: rgba(88, 166, 255, 0.10);
-  }}
-
-  /* Smooth scroll when jumping to anchors */
+  /* Smooth scroll for any in-page anchors */
   html {{ scroll-behavior: smooth; }}
-  /* Offset anchor targets so the fixed header doesn't cover them */
-  [id^="sec-"] {{ scroll-margin-top: 40px; }}
 
-  @media (max-width: 1200px) {{
-      .nav-jump {{ display: none; }}
+  /* ---- Hero-large price card (the big one at top) ---- */
+  .kpi.hero-large {{
+      padding: 26px 28px;
+      background: linear-gradient(135deg, {CARD} 0%, #181F2C 100%);
+  }}
+  .kpi.hero-large .kpi-label {{ font-size: 11px; }}
+  .kpi.hero-large .kpi-value {{
+      font-size: 48px; letter-spacing: -1.2px;
+      color: {ACCENT};
+      margin-top: 6px;
+  }}
+  .kpi.hero-large .kpi-row {{
+      display: flex; gap: 22px; flex-wrap: wrap;
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid {BORDER};
+  }}
+  .kpi.hero-large .kpi-row .item {{ display: flex; flex-direction: column; gap: 2px; }}
+  .kpi.hero-large .kpi-row .item-label {{
+      font-size: 9.5px; font-weight: 600; color: {MUTED};
+      text-transform: uppercase; letter-spacing: 0.7px;
+  }}
+  .kpi.hero-large .kpi-row .item-value {{
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      font-weight: 500; color: {TEXT}; font-variant-numeric: tabular-nums;
   }}
 </style>
-""", unsafe_allow_html=True)
-
-
-# ---- Floating jump-nav anchored top-right ---------------------------------
-st.markdown("""
-<div class="nav-jump">
-  <div class="nav-jump-label">Jump to</div>
-  <a href="#sec-price">Price</a>
-  <a href="#sec-paths">Paths</a>
-  <a href="#sec-conv">Convergence</a>
-  <a href="#sec-sens">Sensitivity</a>
-  <a href="#sec-vr">Variance Reduction</a>
-</div>
 """, unsafe_allow_html=True)
 
 
@@ -433,6 +400,7 @@ st.markdown(
 )
 
 
+
 # ============================================================================
 #  SECTION 1 — KPI cards
 # ============================================================================
@@ -441,36 +409,98 @@ if use_cv and plain_result.std_error > 0 and cv_result.std_error > 0:
     var_red_ratio = (plain_result.std_error / cv_result.std_error) ** 2
     var_red_pct   = (1.0 - (cv_result.std_error / plain_result.std_error) ** 2) * 100
     vr_value = f"{var_red_ratio:.0f}×"
-    vr_sub = f"{var_red_pct:.1f}% less variance vs plain MC"
+    vr_sub = f"{var_red_pct:.1f}% less variance"
     vr_class = "good"
 else:
-    vr_value = "—"
+    vr_value = "off"
     vr_sub = "Control variate disabled"
     vr_class = ""
 
-cards = [
-    ("Option Price", f"{chosen.price:.4f}",
-     "Geometric CV" if use_cv else "Plain MC", "accent"),
-    ("95% Confidence Interval", f"±{(hi - lo) / 2:.4f}",
-     f"[{lo:.4f}, {hi:.4f}]", ""),
-    ("Standard Error", f"{chosen.std_error:.5f}",
-     f"of the price estimate", ""),
-    ("Runtime", f"{chosen.runtime_ms:.0f} ms",
-     f"{chosen.n_paths:,} paths", ""),
-    ("Variance Reduction", vr_value, vr_sub, vr_class),
-]
-cols = st.columns(5, gap="small")
-for col, (label, value, sub, cls) in zip(cols, cards):
-    col.markdown(f"""
-    <div class="kpi {cls}">
-        <div class="kpi-label">{label}</div>
-        <div class="kpi-value num">{value}</div>
-        <div class="kpi-sub">{sub}</div>
+st.markdown('<div id="sec-price"></div>', unsafe_allow_html=True)
+
+# ---- Row 1: HERO price card (left) + 4 stat cards in 2x2 (right) ----
+hero_col, side_col = st.columns([5, 5], gap="medium")
+
+with hero_col:
+    method_label = "MC + Antithetic + Geometric CV" if use_cv else "Plain Monte Carlo"
+    st.markdown(f"""
+    <div class="kpi hero-large accent">
+        <div class="kpi-label">Option Price · {option_type_label}</div>
+        <div class="kpi-value num">{chosen.price:.4f}</div>
+        <div class="kpi-row">
+            <div class="item">
+                <span class="item-label">95% Confidence Interval</span>
+                <span class="item-value">[{lo:.4f}, {hi:.4f}]</span>
+            </div>
+            <div class="item">
+                <span class="item-label">Standard Error</span>
+                <span class="item-value">{chosen.std_error:.5f}</span>
+            </div>
+            <div class="item">
+                <span class="item-label">Method</span>
+                <span class="item-value">{method_label}</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with side_col:
+    # 2x2 grid of supporting stats
+    row_a = st.columns(2, gap="small")
+    row_b = st.columns(2, gap="small")
+
+    row_a[0].markdown(f"""
+    <div class="kpi">
+        <div class="kpi-label">Runtime</div>
+        <div class="kpi-value num">{chosen.runtime_ms:.0f} ms</div>
+        <div class="kpi-sub">{chosen.n_paths:,} paths simulated</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    row_a[1].markdown(f"""
+    <div class="kpi {vr_class}">
+        <div class="kpi-label">Variance Reduction</div>
+        <div class="kpi-value num">{vr_value}</div>
+        <div class="kpi-sub">{vr_sub}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Compute moneyness and time value for the bottom-row info cards
+    intrinsic = (max(S0 - K, 0.0) if is_call else max(K - S0, 0.0))
+    time_value = max(chosen.price - intrinsic, 0.0)
+    tv_pct = (time_value / chosen.price * 100) if chosen.price > 0 else 0
+    moneyness_pct = (S0 / K - 1) * 100
+    money_label = (
+        "ITM" if (is_call and moneyness_pct > 1) or (not is_call and moneyness_pct < -1)
+        else "ATM" if abs(moneyness_pct) <= 1
+        else "OTM"
+    )
+
+    row_b[0].markdown(f"""
+    <div class="kpi">
+        <div class="kpi-label">Time Value</div>
+        <div class="kpi-value num">{time_value:.4f}</div>
+        <div class="kpi-sub">{tv_pct:.0f}% of premium · intrinsic {intrinsic:.2f}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    row_b[1].markdown(f"""
+    <div class="kpi">
+        <div class="kpi-label">Moneyness</div>
+        <div class="kpi-value num">{moneyness_pct:+.1f}%</div>
+        <div class="kpi-sub">{money_label} · S/K = {S0/K:.4f}</div>
     </div>
     """, unsafe_allow_html=True)
 
 
-# ---------- Greeks strip (Δ Γ ν Θ ρ) ----------
+# ---- Row 2: Greeks strip (Δ Γ ν Θ ρ) ----
+st.markdown(
+    '<div style="font-size:11px; font-weight:600; letter-spacing:0.7px; '
+    f'text-transform:uppercase; color:{MUTED}; margin: 22px 0 8px 0;">'
+    'Risk Sensitivities (Greeks)</div>',
+    unsafe_allow_html=True,
+)
+
 with st.spinner("Computing risk sensitivities (Greeks)…"):
     greeks = compute_greeks_cached(
         S0, K, r, sigma, T, m_eff, N, option_type_value,
@@ -499,12 +529,13 @@ st.markdown("---")
 # ============================================================================
 #  SECTION 2 — Simulated paths
 # ============================================================================
-st.markdown('<div class="section-title">Simulated Price Paths</div>',
+st.markdown('<div id="sec-paths" class="section-title">Simulated Price Paths</div>',
             unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-caption">Monte Carlo generates many possible futures '
-    'for the underlying. The Asian option pays based on the <b>average</b> '
-    'of each path, not its endpoint — so the entire shape matters.</div>',
+    '<div class="section-caption">Monte Carlo simulates many possible futures '
+    'for the asset price. The Asian option pays based on the <b>average</b> of '
+    'each path, not just where it ends. So the full shape of the path matters, '
+    'not only the final value.</div>',
     unsafe_allow_html=True,
 )
 
@@ -551,9 +582,9 @@ fig_paths.update_xaxes(title="Time (years)")
 fig_paths.update_yaxes(title="Asset price")
 st_plot(fig_paths)
 st.markdown(
-    '<div class="section-caption">Arithmetic Asian options depend on the '
-    'average asset price over time rather than only the terminal price. '
-    'This smoothes the payoff and reduces sensitivity to single-day price spikes.</div>',
+    '<div class="section-caption">Asian options use the average price over '
+    'time instead of just the final price. This makes the payoff smoother and '
+    'less affected by sudden one day price spikes.</div>',
     unsafe_allow_html=True,
 )
 
@@ -563,12 +594,13 @@ st.markdown("---")
 # ============================================================================
 #  SECTION 3 — Monte Carlo convergence
 # ============================================================================
-st.markdown('<div class="section-title">Monte Carlo Convergence</div>',
+st.markdown('<div id="sec-conv" class="section-title">Monte Carlo Convergence</div>',
             unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-caption">The estimator stabilises as more paths are '
-    'added, with the 95% confidence band shrinking at rate <b>1 / √N</b>. To '
-    'halve the standard error, you need 4× more simulations.</div>',
+    '<div class="section-caption">As we add more simulated paths, the price '
+    'estimate settles down. The confidence band shrinks following the rule '
+    '<b>1 / √N</b>. So if you want to halve the error, you need <b>4 times '
+    'more paths</b>.</div>',
     unsafe_allow_html=True,
 )
 
@@ -642,8 +674,9 @@ fig_conv.update_xaxes(type="log", title="Number of simulations (log scale)")
 fig_conv.update_yaxes(title="Estimated price")
 st_plot(fig_conv)
 st.markdown(
-    '<div class="section-caption">As the number of simulations increases, '
-    'the Monte Carlo estimate stabilises and becomes more accurate.</div>',
+    '<div class="section-caption">The green dashed line shows the value the '
+    'simulation is converging towards. The blue band shows how confident we '
+    'are about the current estimate.</div>',
     unsafe_allow_html=True,
 )
 
@@ -653,12 +686,12 @@ st.markdown("---")
 # ============================================================================
 #  SECTION 4 — Sensitivity analysis
 # ============================================================================
-st.markdown('<div class="section-title">Sensitivity Analysis</div>',
+st.markdown('<div id="sec-sens" class="section-title">Sensitivity Analysis</div>',
             unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-caption">How does the price respond when we vary '
-    'one or two inputs? Sensitivity analysis reveals which parameters move '
-    'the price the most — the foundation of risk management.</div>',
+    '<div class="section-caption">How does the price change when we adjust '
+    'one or two inputs? These charts show which parameters move the price '
+    'the most. That is the foundation of risk management.</div>',
     unsafe_allow_html=True,
 )
 
@@ -859,10 +892,10 @@ st_plot(fig_heat)
 
 st.markdown(
     '<div class="section-caption">The four line charts show how the price '
-    'responds to one parameter at a time; the heatmap shows the joint effect '
-    'of spot and volatility. Read the steepest gradient as the region of '
-    'highest risk concentration — where small parameter moves cause the '
-    'largest price changes.</div>',
+    'responds when one input changes at a time. The heatmap shows what '
+    'happens when both spot and volatility change together. The steepest '
+    'gradient on the heatmap marks the area of highest risk, where small '
+    'parameter moves cause the largest price changes.</div>',
     unsafe_allow_html=True,
 )
 
@@ -872,12 +905,13 @@ st.markdown("---")
 # ============================================================================
 #  SECTION 5 — Variance reduction comparison
 # ============================================================================
-st.markdown('<div class="section-title">Variance Reduction Comparison</div>',
+st.markdown('<div id="sec-vr" class="section-title">Variance Reduction Comparison</div>',
             unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-caption">The geometric-Asian control variate uses '
-    'the closed-form Kemna-Vorst (1990) price as a per-path correction — '
-    'removing most of the simulation noise without introducing bias.</div>',
+    '<div class="section-caption">The geometric Asian control variate uses '
+    'the Kemna Vorst (1990) closed form price as a per path correction. '
+    'It removes most of the simulation noise without changing the fair '
+    'value, giving the same answer with much tighter confidence.</div>',
     unsafe_allow_html=True,
 )
 
@@ -906,7 +940,7 @@ with vr_cols[1]:
     if plain_result.std_error > 0 and cv_result.std_error > 0:
         vr_ratio_str = f"{(plain_result.std_error / cv_result.std_error) ** 2:.0f}×"
     else:
-        vr_ratio_str = "—"
+        vr_ratio_str = "n/a"
     df_vr = pd.DataFrame({
         "Method": ["Plain Monte Carlo", "MC + Control Variate"],
         "Price": [f"{plain_result.price:.4f}", f"{cv_result.price:.4f}"],
@@ -918,13 +952,13 @@ with vr_cols[1]:
 
     if plain_result.std_error > 0 and cv_result.std_error > 0:
         equiv_paths = int(N * (plain_result.std_error / cv_result.std_error) ** 2)
+        ratio = (plain_result.std_error / cv_result.std_error) ** 2
         st.markdown(
             f'<div class="section-caption" style="margin-top:8px;">'
-            f'To match the CV estimator\'s precision, plain Monte Carlo would '
-            f'need approximately <b>{equiv_paths:,} paths</b> '
-            f'(vs <b>{N:,}</b> here) — the same accuracy in '
-            f'<b>{(plain_result.std_error / cv_result.std_error) ** 2:.0f}×</b> '
-            f'less compute.'
+            f'To get the same precision with plain Monte Carlo, you would '
+            f'need about <b>{equiv_paths:,} paths</b> '
+            f'(vs <b>{N:,}</b> here). That is <b>{ratio:.0f}×</b> more '
+            f'compute for the same accuracy.'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -933,126 +967,31 @@ st.markdown("---")
 
 
 # ============================================================================
-#  SECTION 6 — Educational notes
+#  Footer — author credit
 # ============================================================================
-st.markdown('<div class="section-title">Concepts</div>',
-            unsafe_allow_html=True)
-
-with st.expander("What is an Asian Option?"):
-    st.markdown("""
-An **Asian option** is an exotic option whose payoff depends on the **average price**
-of the underlying asset over a monitoring window, rather than the price at expiry alone.
-For a fixed-strike arithmetic Asian:
-
-> **Call payoff** = max( Ā − K , 0 )    where Ā = (1/m) Σᵢ S(tᵢ)
-> **Put  payoff** = max( K − Ā , 0 )
-
-Asian options are widely used in commodity, FX and energy markets. An oil refiner that
-buys crude every day cares about the **average** annual price, not the price on
-31 December — so hedging the average matches the real economic exposure.
-
-They are also **cheaper** than vanilla European options because averaging dampens
-the path's volatility, and they are **harder to manipulate** because no single tick
-determines the payoff.
-    """)
-
-with st.expander("What is Monte Carlo Simulation?"):
-    st.markdown("""
-**Monte Carlo simulation** prices an option by:
-
-1. Generating many random future paths for the underlying asset.
-2. Computing the option payoff on each path.
-3. Averaging the discounted payoffs to estimate the fair price.
-
-For an arithmetic Asian option there is **no closed-form solution** — the sum of
-correlated lognormals isn't itself lognormal. Monte Carlo is the standard approach.
-
-The estimator's accuracy improves at rate **1 / √N**, meaning that to **halve** the
-standard error you need **4×** more simulations. This slow convergence is Monte
-Carlo's main weakness — and the motivation for variance-reduction techniques.
-    """)
-
-with st.expander("Why do we use variance reduction?"):
-    st.markdown("""
-Plain Monte Carlo can require millions of paths to reach tight confidence intervals.
-Variance reduction techniques tighten the standard error without introducing bias.
-
-**Antithetic variates** pair each random path with its sign-flipped mirror. Roughly
-halves the variance for symmetric payoffs.
-
-**Control variates** exploit a related instrument whose true price is known. For the
-arithmetic Asian, the **geometric Asian** has a closed-form solution
-(*Kemna & Vorst, 1990*) and is ~99% correlated with the arithmetic Asian. Using
-the geometric price as a per-path correction removes most of the simulation noise.
-
-The variance-reduction factor is `(1 − ρ²)` — for ρ ≈ 0.99 that's a **~50× reduction
-in variance** in theory, and 100×+ in practice once combined with antithetic variates.
-    """)
-
-with st.expander("What are the Greeks (Δ, Γ, ν, Θ, ρ)?"):
-    st.markdown("""
-The **Greeks** are first-order sensitivities of the option price to each input
-parameter. They tell you how the price changes for a tiny move in one variable,
-which is exactly what a trader needs to know to hedge.
-
-| Symbol | Name  | What it measures                                  | Sign for a call (typically) |
-|--------|-------|---------------------------------------------------|------------------------------|
-| **Δ Delta** | Delta | ∂Price / ∂S₀ — change per €1 of spot       | 0 to 1 |
-| **Γ Gamma** | Gamma | ∂Δ / ∂S₀ — curvature of the price in S₀    | > 0 |
-| **ν Vega**  | Vega  | ∂Price / ∂σ — change per 1% change in vol  | > 0 |
-| **Θ Theta** | Theta | ∂Price / ∂t — time decay per calendar day  | < 0 (option loses value over time) |
-| **ρ Rho**   | Rho   | ∂Price / ∂r — change per 1% change in rate | > 0 for call, < 0 for put |
-
-For Asian options, **all Greeks are smaller in absolute value** than for the
-corresponding European vanilla option — the averaging dampens sensitivity to any
-single moment in time. This is one of the key economic reasons Asian options
-are popular as hedging instruments.
-
-In this engine, Greeks are computed by **finite differences with common random numbers**
-(same Brownian paths at the base and bumped parameters, so the noise cancels).
-Delta is additionally cross-checked against an independent **pathwise estimator**
-(Broadie & Glasserman, 1996) — they must agree, which is one of the validation tests.
-    """)
-
-with st.expander("Why 252 monitoring dates? What does m mean?"):
-    st.markdown("""
-**m** is the **number of monitoring dates** — the times at which the underlying
-price is sampled to build the running average that drives the payoff. The choice
-matters and is set by the contract specification, not by the model.
-
-| Frequency | m / year | Typical use |
-|-----------|----------|-------------|
-| Monthly | 12 | Some FX Asian options, employee stock options |
-| Weekly  | 52 | Mid-frequency commodity contracts |
-| Daily   | **252** | The standard for liquid commodity (crude oil, jet fuel) and many index Asians |
-
-**Why 252?** Markets have approximately **252 trading days per year** (the calendar
-has 365 days but ~110 weekends + holidays are removed). So over a 1-year contract
-with daily monitoring, the average is built from 252 daily price observations.
-
-**Why m matters for our model:**
-1. **Higher m → finer average.** With m = 252 the discrete arithmetic average is
-   very close to the continuous-time average.
-2. **The Kemna-Vorst formula depends on m explicitly** — the formula uses
-   σ_g² = σ²·(m+1)(2m+1)/(6m²) and ν = (r-σ²/2)·(m+1)/(2m). As m → ∞ these
-   converge to σ²/3 and (r-σ²/2)/2, the well-known continuous-monitoring limits.
-3. **More sampling dates ⇒ slightly more compute** but a more realistic price
-   for liquid markets.
-
-For your report, you can simply say: *"The contract specifies daily monitoring
-over the maturity period (m = 252 × T sampling dates), matching the standard
-convention for OTC commodity Asian options."*
-    """)
-
-
-# ============================================================================
-#  Footer
-# ============================================================================
-st.markdown("""
-<div style="text-align:center; color:#586069; font-size:11px;
-            padding: 30px 0 10px 0; letter-spacing: 0.3px;
-            font-family: 'JetBrains Mono', monospace;">
-  Asian Option Pricer · Monte Carlo with Geometric Control Variate ·
-  Quantitative Finance Project · UEP Poznań 2026
+st.markdown(f"""
+<div style="
+    text-align: center;
+    padding: 40px 0 24px 0;
+    margin-top: 20px;
+    border-top: 1px solid {BORDER};
+">
+    <div style="
+        font-size: 13px;
+        font-weight: 500;
+        color: {TEXT};
+        letter-spacing: 0.2px;
+        margin-bottom: 4px;
+    ">
+        Built by <span style="color: {ACCENT};">Gautam Prasad</span> · 2026
+    </div>
+    <div style="
+        font-size: 11.5px;
+        color: {MUTED};
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 0.3px;
+    ">
+        Poznań University of Economics and Business
+    </div>
 </div>
 """, unsafe_allow_html=True)
