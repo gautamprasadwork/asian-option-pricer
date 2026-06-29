@@ -983,7 +983,7 @@ st.markdown(f"""
         letter-spacing: 0.2px;
         margin-bottom: 4px;
     ">
-        Built by <span style="color: {ACCENT};">Gautam Prasad</span> · 2026
+        Built by <span style="color: {ACCENT};">Gautam Prasad, Monica Bernatowicz</span> · 2026
     </div>
     <div style="
         font-size: 11.5px;

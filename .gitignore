@@ -39,3 +39,19 @@ Thumbs.db
 asian_pricing.csv
 asian_pricing.json
 .cache/
+
+# Report documents and LaTeX build artefacts (not needed to run the app)
+REPORT.aux
+REPORT.log
+REPORT.out
+REPORT.pdf
+REPORT.docx
+REPORT.tex
+REPORT.md
+Final_report.pdf
+
+# Generated report visuals (regenerate with generate_visuals.py)
+visuals/
+
+# Local Claude config
+.claude/
