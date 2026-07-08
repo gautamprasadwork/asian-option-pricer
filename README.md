@@ -11,6 +11,9 @@ delta-hedging, calibration, and sensitivity analysis.
 ## Live 
 https://asianoptionprice.streamlit.app/
 
+## Report
+https://github.com/gautamprasadwork/asian-option-pricer/blob/main/Arithmetic_asian_option.pdf
+
 ## Run it
 
 ```bash
