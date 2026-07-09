@@ -12,7 +12,7 @@ delta-hedging, calibration, and sensitivity analysis.
 https://asianoptionprice.streamlit.app/
 
 ## Report
-https://github.com/gautamprasadwork/asian-option-pricer/blob/main/Arithmetic_asian_option.pdf
+https://github.com/gautamprasadwork/Asian-Option-Pricing-Monte-Carlo/blob/main/Arithmetic_asian_option.pdf
 
 ## Run it
 
